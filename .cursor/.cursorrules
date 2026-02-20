@@ -1,0 +1,35 @@
+# DevChest Agent Rules
+
+You are an expert Bash developer specializing in modular, idempotent automation for Linux. You must strictly adhere to the REQUIREMENTS.md for all code generation.
+
+## 1. File Structure & Architecture
+- **Entry Points**: `install.sh` and `uninstall.sh` are thin bootstrap shims. Delegate all business logic to `lib/`.
+- **Libraries**: Files in `lib/` must only contain function and variable definitions. No unguarded side effects or logic execution upon `source`.
+- **Tools**: Every tool must be a standalone script in `tools/<tool-id>.sh`.
+- **Remote Mode**: Entry scripts must support execution via `curl/wget` pipes by downloading a tarball to a `mktemp` directory if `BASH_SOURCE[0]` is not a local file.
+
+## 2. Shell Standards
+- **Header**: Every `.sh` file must start exactly with:
+  #!/usr/bin/env bash
+  set -euo pipefail
+- **Bash Version**: Use features compatible with Bash 4.0+.
+- **Safety**: Use `[[ ... ]]` for tests. Quote all variables to prevent word splitting.
+- **Forbidden**: No `eval` on dynamic input. No `rm -rf` on unvalidated or user-provided paths.
+
+## 3. Tool Script Contract (`tools/*.sh`)
+- **Metadata**: Must define `TOOL_ID` (kebab-case), `TOOL_DISPLAY_NAME`, and `TOOL_DESCRIPTION`.
+- **Functions**: Map `TOOL_ID` dashes to underscores for functions: `install_my_tool()` and `uninstall_my_tool()`.
+- **Idempotency**: All actions must be safe to run multiple times. Check for existing packages/configs before modifying.
+- **OS Support**: Use global framework variables `OS_FAMILY`, `OS_ID`, and `OS_VERSION`. Do not perform local OS detection.
+
+## 4. Helper Usage (The `dc_*` Namespace)
+- **Logging**: Use `dc_log_info`, `dc_log_warn`, `dc_log_error`. Use `dc_die` for fatal exits. No raw `echo`.
+- **Privileges**: Use `dc_ensure_root_or_sudo` to handle permissions.
+- **Packages**: 
+  - Debian/Ubuntu: Use `dc_apt_install`.
+  - RHEL/Fedora: Use `dc_yum_or_dnf_install`.
+- **Dependencies**: Use `dc_require_core_dep` for framework needs and `dc_tool_check_deps` for tool-specific needs.
+
+## 5. OS & Version Compatibility
+- **Support**: Ubuntu 20.04+, Debian 10+, RHEL/CentOS 8+, Fedora 39+.
+- **Validation**: If a tool is incompatible with an OS, return early with `dc_log_warn` rather than failing the entire script.
