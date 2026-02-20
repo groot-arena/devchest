@@ -84,14 +84,20 @@ Clone and run from a local checkout:
 ```bash
 git clone https://github.com/groot-arena/devchest.git
 cd devchest
-sudo ./install.sh
+sudo bash install.sh
 ```
 
 To uninstall tools from a local checkout:
 
 ```bash
-sudo ./uninstall.sh
+sudo bash uninstall.sh
 ```
+
+**Flags:**
+
+- `--help` — show usage and exit.
+- `--verbose` — enable verbose logging (or set `DC_VERBOSE=1`).
+- `--keep-workdir` — when using the remote one-liner, keep the temporary directory after the run (debug; or set `DC_KEEP_WORKDIR=1`).
 
 Local usage is functionally equivalent to the remote one-liners, but makes it easier to inspect and modify scripts.
 
@@ -116,7 +122,7 @@ sudo bash -c "$(wget -qO- https://raw.githubusercontent.com/groot-arena/devchest
 From a local clone:
 
 ```bash
-sudo ./uninstall.sh
+sudo bash uninstall.sh
 ```
 
 The uninstall flow:
@@ -163,6 +169,13 @@ For full contracts and examples (especially for new tools or automated agents), 
 
 Tools are discovered dynamically from `tools/*.sh` – nothing is hard-coded in the entry scripts.
 
+Included in v1:
+
+- **docker** — Docker Engine (official Docker repo).
+- **vscode** — Visual Studio Code (official Microsoft repo).
+- **nvm** — Node Version Manager (script-based install).
+- **google-chrome** — Google Chrome browser (official Google repo).
+
 Each tool script:
 
 - Declares a stable `TOOL_ID` and display metadata.
@@ -170,15 +183,7 @@ Each tool script:
 - Implements install/uninstall for all supported distros.
 - May restrict itself to specific OS IDs via metadata (in which case it will be hidden on unsupported distros).
 
-Example (current placeholder):
-
-- `tools/vscode.sh` – Visual Studio Code installation logic.
-
-Planned categories (for future profiles):
-
-- Developer tools (IDEs, editors, language runtimes).
-- Bug-hunting / security tools.
-- Everyday utilities (browsers, terminals, etc.).
+For the full tool contract (metadata, function names, idempotency), see [REQUIREMENTS.md](REQUIREMENTS.md).
 
 ---
 
