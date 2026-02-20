@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint (shellcheck + shfmt)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck shfmt
+
+      - name: ShellCheck
+        run: shellcheck -x install.sh uninstall.sh lib/*.sh tools/*.sh
+
+      - name: shfmt check
+        run: shfmt -d -i 2 -ci -bn -sr .
+
+  smoke:
+    name: Smoke (${{ matrix.os }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu:22.04
+          - debian:12
+          - fedora:39
+          - rockylinux:8
+
+    container:
+      image: ${{ matrix.os }}
+      options: --privileged
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bash (if minimal container)
+        run: |
+          if command -v apt-get >/dev/null; then
+            apt-get update && apt-get install -y bash
+          elif command -v dnf >/dev/null; then
+            dnf install -y bash
+          fi
+
+      - name: Run install --help
+        run: bash install.sh --help
+
+      - name: Run uninstall --help
+        run: bash uninstall.sh --help
+
+      - name: Tool discovery smoke
+        run: |
+          source lib/common.sh
+          source lib/debian.sh || true
+          source lib/redhat.sh || true
+          source lib/menu.sh
+          dc_discover_tools install
+          echo "Discovered ${#DC_TOOL_IDS[@]} tools"
+          test ${#DC_TOOL_IDS[@]} -ge 1
