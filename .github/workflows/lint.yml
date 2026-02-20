@@ -1,0 +1,48 @@
+# Lint workflow: shellcheck, shfmt, and standards verification for all shell scripts.
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get update -qq && sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck
+        run: |
+          set -e
+          for f in lib/*.sh install.sh uninstall.sh tools/*.sh; do
+            [[ -f "$f" ]] && shellcheck "$f"
+          done
+
+      - name: Install shfmt
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y shfmt
+
+      - name: Check formatting (shfmt)
+        run: |
+          set -e
+          unformatted=""
+          for f in lib/*.sh install.sh uninstall.sh tools/*.sh; do
+            [[ -f "$f" ]] || continue
+            if ! shfmt -d -i 2 -ci -bn -sr "$f" 2>/dev/null; then
+              unformatted="$unformatted $f"
+            fi
+          done
+          if [[ -n "$unformatted" ]]; then
+            echo "Run: shfmt -i 2 -ci -bn -sr -w$unformatted"
+            exit 1
+          fi
+
+      - name: Run verify-standards
+        run: bash scripts/verify-standards.sh
