@@ -1,5 +1,7 @@
 # Lint workflow: shellcheck, shfmt, and standards verification for all shell scripts.
 name: Lint
+permissions:
+  contents: read
 
 on:
   push:
