@@ -13,10 +13,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies (curl, wget, bash)
+        run: |
+          if command -v apt-get >/dev/null; then
+            apt-get update && apt-get install -y bash curl wget
+          elif command -v dnf >/dev/null; then
+            dnf install -y bash curl wget
+          fi
+
       - name: Install tools
         run: |
-          sudo apt-get update
-          sudo apt-get install -y shellcheck shfmt
+          if command -v apt-get >/dev/null; then
+            sudo apt-get update && sudo apt-get install -y shellcheck shfmt
+          elif command -v dnf >/dev/null; then
+            dnf install -y bash shellcheck shfmt
+          fi
 
       - name: ShellCheck
         run: shellcheck -x install.sh uninstall.sh lib/*.sh tools/*.sh
